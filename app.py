@@ -13,67 +13,12 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+from models import Venue, Artist, Show, app, db
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
-app = Flask(__name__)
-moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-# Done: connect to a local postgresql database
 
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'venues'
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String())
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String(120)))
-    seeking_talent = db.Column(db.Boolean())
-    seeking_description = db.Column(db.TEXT())
-    shows = db.relationship('Show', backref='venue', lazy=True)
-    # Done: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'artists'
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String())
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String(120)))
-    seeking_venue = db.Column(db.Boolean())
-    seeking_description = db.Column(db.TEXT())
-    shows = db.relationship('Show', backref='artist', lazy=True)
-
-class Show(db.Model):
-  __tablename__= 'shows'
-
-  id = db.Column(db.Integer(), primary_key=True)
-  start_time = db.Column(db.String())
-  venue_id = db.Column(db.Integer(), db.ForeignKey('venues.id'))
-  artist_id = db.Column(db.Integer(), db.ForeignKey('artists.id'))
-
-  # Done: implement any missing fields, as a database migration using Flask-Migrate
-# Done Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -160,6 +105,7 @@ def show_venue(venue_id):
   upcoming_shows=[]
   for show in shows:
     past_shows_row= Show.query.filter(show.start_time < datetime.utcnow().isoformat()).all()
+    # past_shows_row = db.session.query(Show).join(Venue).filter(Show.start_time<datetime.now()).filter(Show.venue_id==venue.id).all()
     for pastshow in past_shows_row:
       artist_name= Artist.query.filter_by(id=pastshow.artist_id).first().name
       image_link= Artist.query.filter_by(id=pastshow.artist_id).first().image_link
@@ -218,10 +164,11 @@ def create_venue_submission():
       address=request.form.get('address'),
       phone=request.form.get('phone'),
       genres=request.form.get('genres'),
-      # seeking_description=request.form.get('seeking_description'),
-      # image_link=request.form.get('image_link'),
-      facebook_link=request.form.get('facebook_link')
-      # website=request.form.get('website'),  
+      seeking_description=request.form.get('seeking_description'),
+      seeking_talent=request.form.get('seeking_talent'),
+      image_link=request.form.get('image_link'),
+      facebook_link=request.form.get('facebook_link'),
+      website=request.form.get('website'),  
       )
     db.session.add(new_venue)
     db.session.commit()
@@ -297,7 +244,8 @@ def show_artist(artist_id):
   upcomingshows=[]
   shows=Show.query.filter_by(artist_id=artist.id)
   for show in shows:
-    past_shows_row= Show.query.filter(show.start_time < datetime.utcnow().isoformat()).all()
+    # past_shows_row= Show.query.filter(show.start_time < datetime.utcnow().isoformat()).all()
+    past_shows_row = db.session.query(Show).join(Venue).filter(Show.start_time<datetime.now()).filter(Show.artist_id==artist.id).all()
     for past_show in past_shows_row:
       venue_name= Venue.query.filter_by(id=past_show.venue_id).first().name
       venue_image_link= Venue.query.filter_by(id=past_show.venue_id).first().image_link
@@ -426,11 +374,12 @@ def create_artist_submission():
       city=request.form.get('city'),
       state=request.form.get('state'),
       genres=request.form.get('genres'),
-      # address=request.form.get('address'),
+      address=request.form.get('address'),
       phone=request.form.get('phone'),
-      # image_link=request.form.get('image_link'),
-      facebook_link=request.form.get('facebook_link')
-      # website=request.form.get('website'),    
+      image_link=request.form.get('image_link'),
+      facebook_link=request.form.get('facebook_link'),
+      website=request.form.get('website'),
+      seeking_venue=request.form.get('seeking_venue')  
       )
     db.session.add(new_artist)
     db.session.commit()

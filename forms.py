@@ -119,6 +119,12 @@ class VenueForm(Form):
     facebook_link = StringField(
         'facebook_link', validators=[URL()]
     )
+    seeking_description = StringField(
+        'seeking_description'
+    )
+    seeking_talent = StringField(
+        'seeking_talent'
+    )
 
 class ArtistForm(Form):
     name = StringField(
@@ -187,6 +193,9 @@ class ArtistForm(Form):
         # TODO implement validation logic for state
         'phone', validators=[DataRequired()]
     )
+    address = SelectField(
+        'address'
+    )
     image_link = StringField(
         'image_link'
     )
@@ -218,6 +227,15 @@ class ArtistForm(Form):
     facebook_link = StringField(
         
         'facebook_link', validators=[URL()]
+    )
+    website = StringField(
+        'website'
+    )
+    seeking_venue = StringField(
+        'seeking_venue'
+    )
+    seeking_description = StringField(
+        'seeking_description'
     )
 
 # TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
